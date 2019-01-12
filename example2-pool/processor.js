@@ -1,4 +1,4 @@
-const { Worker, parentPort, isMainThread } = require('worker_threads');
+const { Worker, parentPort, isMainThread, threadId } = require('worker_threads');
 
 class Processor {
 
@@ -17,21 +17,25 @@ class Processor {
     }
 
     _startWorker(data) {
+        const worker = new Worker(__filename);
+        worker.on('message', () => this._sendData(worker, data));
+    }
+
+    _sendData(worker, data) {
         const number = data.shift();
 
-        if (number) {
-            const worker = new Worker(__filename);
-            console.log(`Worker started: ${worker.threadId}`);
-            worker.on('exit', () => this._startWorker(data));
-            worker.postMessage(number);
-        }
+        number ? 
+            worker.postMessage(number) :
+            worker.terminate();
     }
 }
 
 function startWorker() {
+    parentPort.postMessage(true);
+
     parentPort.on('message', message => setTimeout(() => {
-        console.log(`Number processed: ${message}`);
-        process.exit();
+        console.log(`Number processed: '${message}' in worker '${threadId}'`);
+        parentPort.postMessage(true);
     }, 1000));
 }
 
