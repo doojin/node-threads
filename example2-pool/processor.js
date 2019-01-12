@@ -21,6 +21,7 @@ class Processor {
 
         if (number) {
             const worker = new Worker(__filename);
+            console.log(`Worker started: ${worker.threadId}`);
             worker.on('exit', () => this._startWorker(data));
             worker.postMessage(number);
         }
@@ -29,7 +30,7 @@ class Processor {
 
 function startWorker() {
     parentPort.on('message', message => setTimeout(() => {
-        console.log(`Number processed: ${message}`);
+        console.log(`Number processed ${message}`);
         process.exit();
     }, 1000));
 }
